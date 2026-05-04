@@ -311,8 +311,7 @@ function doUpdateSettings(p) {
 }
 
 // ─── IMPORT FROM EXISTING SHEET ───────────────────────────────────────────────
-// Maps your existing column names to the Inventory fields.
-// Default map covers the exact column names from your stores spreadsheet.
+// Handles: headers on any row, duplicate column names, split "Item Heading" column.
 function doImportFromSheet(p) {
   if (!p.sheetId) return fail('sheetId required');
 
@@ -321,25 +320,39 @@ function doImportFromSheet(p) {
   if (!srcSheet) return fail('Source sheet not found');
 
   const data = srcSheet.getDataRange().getValues();
-  if (data.length < 2) return fail('No data rows found');
 
-  const srcHeaders = data[0];
-  // colMap: source column name → destination field name
-  const colMap = p.columnMap ? JSON.parse(p.columnMap) : buildDefaultColMap(srcHeaders);
+  // Auto-detect the header row — find first row that contains 'Description' or 'Part Number'
+  let headerRowIdx = 0;
+  for (let r = 0; r < Math.min(5, data.length); r++) {
+    const row = data[r].map(c => String(c).trim());
+    if (row.includes('Description') || row.includes('Part Number') || row.includes('Heading')) {
+      headerRowIdx = r;
+      break;
+    }
+  }
 
-  const dest    = getOrCreate(INV_SHEET, INV_HEADERS);
+  const srcHeaders = data[headerRowIdx].map(c => String(c).trim());
+  const colMap     = p.columnMap ? JSON.parse(p.columnMap) : buildDefaultColMap(srcHeaders);
+
+  const dest     = getOrCreate(INV_SHEET, INV_HEADERS);
   const existing = sheetToObjects(dest).map(i => String(i.partNumber));
 
   let imported = 0, skipped = 0;
-  for (let r = 1; r < data.length; r++) {
+  for (let r = headerRowIdx + 1; r < data.length; r++) {
     const srcRow = data[r];
     if (!srcRow.some(c => c !== '')) { skipped++; continue; }
 
     const part = {};
     srcHeaders.forEach((h, i) => {
-      const dest = colMap[h];
-      if (dest) part[dest] = srcRow[i];
+      const field = colMap[h];
+      if (field && part[field] === undefined) part[field] = srcRow[i]; // first match wins
     });
+
+    // If sheet has separate "Item" + "Heading" columns, combine into itemHeading
+    if (!part.itemHeading) {
+      const headingIdx = srcHeaders.indexOf('Heading');
+      if (headingIdx > -1 && srcRow[headingIdx]) part.itemHeading = srcRow[headingIdx];
+    }
 
     if (!part.description && !part.partNumber) { skipped++; continue; }
     if (part.partNumber && existing.includes(String(part.partNumber))) { skipped++; continue; }
@@ -347,6 +360,7 @@ function doImportFromSheet(p) {
     part.id          = uid();
     part.lastUpdated = new Date().toISOString();
     dest.appendRow(INV_HEADERS.map(h => part[h] !== undefined ? part[h] : ''));
+    existing.push(String(part.partNumber || ''));
     imported++;
   }
   return ok({ imported: imported, skipped: skipped });
@@ -354,11 +368,11 @@ function doImportFromSheet(p) {
 
 // Builds a best-effort column map from detected headers
 function buildDefaultColMap(headers) {
-  // Maps your spreadsheet's exact header names → Inventory field names
   const knownMap = {
     'Item':                 'item',
     'Qty Required':         'qtyRequired',
     'Item Heading':         'itemHeading',
+    'Heading':              'itemHeading',
     'Description':          'description',
     'OEM':                  'oem',
     '3 Quotes Required?':   'threeQuotesRequired',
