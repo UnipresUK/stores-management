@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unipres — Stores Management</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+:root {
+  --bg:       #0a0d12;
+  --surface:  #131720;
+  --surface2: #1a2030;
+  --border:   #242e42;
+  --text:     #e2e8f0;
+  --muted:    #64748b;
+  --dim:      #94a3b8;
+  --accent:   #3b82f6;
+  --green:    #10b981;
+  --amber:    #f59e0b;
+  --red:      #ef4444;
+  --purple:   #8b5cf6;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ── Nav ── */
+.site-nav {
+  background: #0d1017; border-bottom: 1px solid #1e2a3a;
+  padding: 0 20px; display: flex; align-items: center; gap: 2px; flex-wrap: wrap;
+  position: sticky; top: 0; z-index: 100;
+}
+.nav-brand {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600;
+  color: var(--accent); padding: 12px 14px 12px 0; margin-right: 8px;
+  border-right: 1px solid #1e2a3a; white-space: nowrap;
+}
+.site-nav a {
+  text-decoration: none; color: var(--muted); font-size: 12px;
+  padding: 12px 12px; border-bottom: 2px solid transparent; transition: all .15s; white-space: nowrap; cursor: pointer;
+}
+.site-nav a:hover { color: var(--text); }
+.site-nav a.active { color: var(--text); border-bottom-color: var(--accent); }
+.nav-alert {
+  margin-left: auto; background: var(--red); color: white;
+  font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px;
+  display: none; cursor: pointer;
+}
+
+/* ── Layout ── */
+.view { display: none; padding: 24px 20px; max-width: 1400px; margin: 0 auto; }
+.view.active { display: block; }
+
+/* ── Cards ── */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 20px;
+}
+.card-value { font-size: 32px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+.card-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.card.red .card-value   { color: var(--red); }
+.card.amber .card-value { color: var(--amber); }
+.card.green .card-value { color: var(--green); }
+.card.blue .card-value  { color: var(--accent); }
+
+/* ── Section headers ── */
+.section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px; gap: 12px; flex-wrap: wrap;
+}
+.section-title { font-size: 13px; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: .5px; }
+
+/* ── Table ── */
+.table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: var(--surface2); color: var(--muted); font-weight: 600; padding: 10px 14px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; white-space: nowrap; }
+td { padding: 10px 14px; border-top: 1px solid var(--border); color: var(--text); }
+tr:hover td { background: var(--surface2); cursor: pointer; }
+.badge {
+  display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px;
+  border-radius: 4px; text-transform: uppercase; letter-spacing: .3px;
+}
+.badge-red    { background: #450a0a; color: var(--red); }
+.badge-amber  { background: #451a03; color: var(--amber); }
+.badge-green  { background: #052e16; color: var(--green); }
+.badge-blue   { background: #172554; color: var(--accent); }
+.badge-purple { background: #2e1065; color: var(--purple); }
+
+/* ── Search / toolbar ── */
+.toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+input[type=text], input[type=number], input[type=email], select, textarea {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); font-family: inherit; font-size: 13px; padding: 8px 12px;
+  outline: none; transition: border .15s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+input[type=text] { width: 260px; }
+select { cursor: pointer; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 6px; border: none; font-family: inherit;
+  font-size: 13px; font-weight: 500; cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: #2563eb; }
+.btn-success { background: #065f46; color: var(--green); }
+.btn-success:hover { background: #047857; }
+.btn-danger  { background: #450a0a; color: var(--red); }
+.btn-danger:hover  { background: #7f1d1d; }
+.btn-ghost   { background: var(--surface2); color: var(--dim); border: 1px solid var(--border); }
+.btn-ghost:hover   { color: var(--text); border-color: var(--muted); }
+.btn-amber   { background: #451a03; color: var(--amber); }
+.btn-amber:hover   { background: #78350f; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+/* ── Modal ── */
+.modal-backdrop {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7);
+  z-index: 200; align-items: center; justify-content: center; padding: 16px;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+}
+.modal-header h3 { font-size: 16px; font-weight: 600; }
+.modal-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; line-height: 1; }
+.modal-close:hover { color: var(--text); }
+.modal-body { padding: 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+/* ── Form grid ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid.wide { grid-template-columns: 1fr; }
+.field label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
+.field input, .field select, .field textarea { width: 100%; }
+.field textarea { min-height: 64px; resize: vertical; }
+.field.span2 { grid-column: span 2; }
+@media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } .field.span2 { grid-column: span 1; } }
+
+/* ── Scan view ── */
+.scan-wrap {
+  max-width: 480px; margin: 0 auto;
+}
+#qr-reader { border-radius: 10px; overflow: hidden; border: 2px solid var(--border); background: #000; }
+#qr-reader video { width: 100% !important; border-radius: 8px; }
+.scan-result {
+  margin-top: 20px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 20px; display: none;
+}
+.scan-result.visible { display: block; }
+.scan-part-name { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+.scan-part-sub  { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+.qty-display { font-size: 48px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; text-align: center; padding: 16px 0; }
+.qty-display.low { color: var(--red); }
+.adjust-row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+.adjust-row input[type=number] { width: 80px; text-align: center; font-size: 16px; padding: 10px; }
+.scan-actions { display: flex; gap: 10px; }
+.scan-actions .btn { flex: 1; justify-content: center; }
+
+/* ── Labels ── */
+.label-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 16px; }
+.label-card {
+  background: white; border: 1px solid #e5e7eb; border-radius: 6px;
+  padding: 12px; text-align: center; page-break-inside: avoid;
+}
+.label-card canvas { display: block; margin: 0 auto 8px; }
+.label-pn { font-size: 11px; font-weight: 700; color: #111; font-family: monospace; }
+.label-desc { font-size: 10px; color: #555; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
+.label-loc { font-size: 9px; color: #888; margin-top: 2px; }
+@media print {
+  .site-nav, .toolbar, .btn, .section-head { display: none !important; }
+  body { background: white; }
+  .view { padding: 0; }
+  .label-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .label-card { border: 1px solid #ccc; }
+}
+
+/* ── Import ── */
+.import-step {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 20px; margin-bottom: 16px;
+}
+.import-step h4 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+.col-map-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; margin-bottom: 8px; font-size: 12px; }
+.col-map-row .arrow { color: var(--muted); text-align: center; }
+.col-map-row select { width: 100%; }
+
+/* ── Settings ── */
+.settings-section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+.settings-section h4 { font-size: 13px; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 14px; }
+.settings-row { display: grid; grid-template-columns: 200px 1fr; gap: 12px; align-items: center; margin-bottom: 10px; }
+.settings-row label { font-size: 13px; color: var(--dim); }
+.settings-row input, .settings-row select { width: 100%; }
+.toggle { display: flex; align-items: center; gap: 8px; }
+.toggle input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
+
+/* ── Setup banner ── */
+.setup-banner {
+  background: #172554; border: 1px solid #1d4ed8; border-radius: 10px;
+  padding: 20px 24px; margin-bottom: 24px; display: none;
+}
+.setup-banner h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; color: var(--accent); }
+.setup-banner p { font-size: 13px; color: var(--dim); line-height: 1.6; }
+.setup-banner ol { font-size: 13px; color: var(--dim); line-height: 1.8; padding-left: 20px; margin-top: 8px; }
+.setup-banner code { font-family: 'IBM Plex Mono', monospace; font-size: 11px; background: rgba(255,255,255,.08); padding: 1px 5px; border-radius: 3px; }
+
+/* ── Misc ── */
+.empty-state { text-align: center; padding: 48px 24px; color: var(--muted); }
+.empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+.toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 999;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 18px; font-size: 13px; display: none; max-width: 320px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+.toast.success { border-color: var(--green); color: var(--green); }
+.toast.error   { border-color: var(--red);   color: var(--red); }
+.toast.show    { display: block; }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.2); border-top-color: white; border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="site-nav">
+  <div class="nav-brand">UNIPRES / STORES</div>
+  <a onclick="showView('dashboard')" id="nav-dashboard" class="active">Dashboard</a>
+  <a onclick="showView('inventory')" id="nav-inventory">Inventory</a>
+  <a onclick="showView('scan')"      id="nav-scan">Scan</a>
+  <a onclick="showView('labels')"    id="nav-labels">Labels</a>
+  <a onclick="showView('import')"    id="nav-import">Import</a>
+  <a onclick="showView('settings')"  id="nav-settings">Settings</a>
+  <span class="nav-alert" id="low-stock-badge" onclick="showView('dashboard')"></span>
+</nav>
+
+<!-- ═══════════════════ DASHBOARD ═══════════════════ -->
+<div class="view active" id="view-dashboard">
+  <div class="setup-banner" id="setup-banner">
+    <h3>⚙ First-time setup required</h3>
+    <p>To get started, you need to deploy the Google Apps Script backend and paste the URL here.</p>
+    <ol>
+      <li>Go to <a href="https://script.google.com" target="_blank" style="color:var(--accent)">script.google.com</a> → New project</li>
+      <li>Paste the contents of <code>stores-google-apps-script/Code.gs</code> into the editor</li>
+      <li>Replace <code>YOUR_SPREADSHEET_ID_HERE</code> with your Google Sheet ID</li>
+      <li>Click <strong>Deploy → New deployment → Web app</strong> → Execute as <em>Me</em> → Anyone can access → Deploy</li>
+      <li>Copy the web app URL and paste it in <strong>Settings → API URL</strong></li>
+      <li>In Settings, click <strong>Run Setup</strong> to create the required sheets</li>
+    </ol>
+  </div>
+
+  <div class="cards" id="dash-cards">
+    <div class="card blue">
+      <div class="card-value" id="d-total">—</div>
+      <div class="card-label">Total Parts</div>
+    </div>
+    <div class="card red">
+      <div class="card-value" id="d-low">—</div>
+      <div class="card-label">Low / Out of Stock</div>
+    </div>
+    <div class="card amber">
+      <div class="card-value" id="d-value">—</div>
+      <div class="card-label">Inventory Value (£)</div>
+    </div>
+    <div class="card green">
+      <div class="card-value" id="d-txn">—</div>
+      <div class="card-label">Transactions (30d)</div>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <span class="section-title">Low Stock Alerts</span>
+    <button class="btn btn-ghost btn-sm" onclick="refresh()">↻ Refresh</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Part Number</th><th>Description</th><th>OEM</th>
+          <th>Qty</th><th>Reorder At</th><th>Supplier</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="low-stock-table">
+        <tr><td colspan="7" class="empty-state">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-head" style="margin-top:24px;">
+    <span class="section-title">Recent Transactions</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Time</th><th>Part</th><th>Type</th><th>Qty</th><th>User</th><th>Notes</th></tr></thead>
+      <tbody id="recent-txn-table"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════ INVENTORY ═══════════════════ -->
+<div class="view" id="view-inventory">
+  <div class="section-head">
+    <div class="toolbar">
+      <input type="text" id="inv-search" placeholder="Search parts…" oninput="filterInventory()">
+      <select id="inv-filter-heading" onchange="filterInventory()"><option value="">All categories</option></select>
+      <select id="inv-filter-stock" onchange="filterInventory()">
+        <option value="">All stock levels</option>
+        <option value="low">Low / Out of stock</option>
+        <option value="ok">OK</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="openPartModal(null)">+ Add Part</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Part No.</th><th>Description</th><th>Category</th><th>OEM</th>
+          <th>Qty</th><th>Reorder</th><th>Cost</th><th>Location</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="inv-table"><tr><td colspan="9" class="empty-state">Loading…</td></tr></tbody>
+    </table>
+  </div>
+  <div id="inv-footer" style="font-size:12px;color:var(--muted);margin-top:10px;text-align:right;"></div>
+</div>
+
+<!-- ═══════════════════ SCAN ═══════════════════ -->
+<div class="view" id="view-scan">
+  <div class="scan-wrap">
+    <div class="section-head">
+      <span class="section-title">QR Code Scanner</span>
+      <button class="btn btn-ghost btn-sm" id="scan-toggle-btn" onclick="toggleScanner()">▶ Start Camera</button>
+    </div>
+    <div id="qr-reader"></div>
+    <p style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center;">
+      Point camera at a shelf QR code, or <a onclick="manualLookup()" style="color:var(--accent);cursor:pointer;">enter part number manually</a>
+    </p>
+
+    <div class="scan-result" id="scan-result">
+      <div class="scan-part-name" id="scan-name"></div>
+      <div class="scan-part-sub" id="scan-sub"></div>
+      <div class="qty-display" id="scan-qty"></div>
+      <div class="adjust-row">
+        <label style="font-size:12px;color:var(--muted);width:60px;">Qty</label>
+        <input type="number" id="adj-qty" value="1" min="1" style="width:80px;">
+        <input type="text" id="adj-user" placeholder="Your name" style="flex:1;">
+      </div>
+      <div class="adjust-row">
+        <label style="font-size:12px;color:var(--muted);width:60px;">Notes</label>
+        <input type="text" id="adj-notes" placeholder="Optional notes" style="flex:1;">
+      </div>
+      <div class="scan-actions">
+        <button class="btn btn-success" onclick="doAdjust('add')">+ Add Stock</button>
+        <button class="btn btn-danger"  onclick="doAdjust('deduct')">− Deduct Stock</button>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:10px;justify-content:center;" onclick="clearScan()">↩ Scan another</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ LABELS ═══════════════════ -->
+<div class="view" id="view-labels">
+  <div class="section-head">
+    <div class="toolbar">
+      <input type="text" id="label-search" placeholder="Filter parts…" oninput="filterLabels()">
+      <select id="label-filter" onchange="filterLabels()"><option value="">All categories</option></select>
+      <span id="label-count" style="font-size:12px;color:var(--muted);"></span>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost" onclick="generateLabels()">⟳ Generate</button>
+      <button class="btn btn-primary" onclick="window.print()">🖨 Print Labels</button>
+    </div>
+  </div>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">
+    Each label contains a QR code encoding the part ID. Use your browser's print function — labels are formatted for A4 / label sheets.
+  </p>
+  <div class="label-grid" id="label-grid">
+    <div class="empty-state">Click Generate to create labels for your inventory.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ IMPORT ═══════════════════ -->
+<div class="view" id="view-import">
+  <div class="import-step">
+    <h4>Step 1 — Source Google Sheet</h4>
+    <div class="field" style="max-width:480px;">
+      <label>Google Sheet ID</label>
+      <input type="text" id="import-sheet-id" placeholder="Paste your Sheet ID (from the URL)">
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-top:8px;">
+      Find it in the sheet URL: docs.google.com/spreadsheets/d/<strong style="color:var(--accent)">SHEET_ID</strong>/edit
+    </p>
+    <div class="field" style="max-width:240px;margin-top:12px;">
+      <label>Sheet / Tab name (optional)</label>
+      <input type="text" id="import-sheet-name" placeholder="Leave blank for first tab">
+    </div>
+  </div>
+
+  <div class="import-step">
+    <h4>Step 2 — Column Mapping</h4>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">
+      Your column names are pre-mapped below. Adjust if your headers differ.
+    </p>
+    <div id="col-map-container">
+      <!-- generated by buildColMapUI() -->
+    </div>
+  </div>
+
+  <div class="import-step" id="import-result-step" style="display:none;">
+    <h4>Import Result</h4>
+    <div id="import-result"></div>
+  </div>
+
+  <button class="btn btn-primary" onclick="runImport()" id="import-btn">Import Parts</button>
+  <p style="font-size:12px;color:var(--muted);margin-top:8px;">
+    Duplicate part numbers are skipped automatically. Existing inventory is not overwritten.
+  </p>
+</div>
+
+<!-- ═══════════════════ SETTINGS ═══════════════════ -->
+<div class="view" id="view-settings">
+  <div class="settings-section">
+    <h4>Connection</h4>
+    <div class="settings-row">
+      <label>Apps Script URL</label>
+      <input type="text" id="s-api-url" placeholder="https://script.google.com/macros/s/…/exec">
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="saveApiUrl()">Save URL</button>
+    <button class="btn btn-ghost btn-sm" style="margin-left:8px;" onclick="runSetup()">Run Setup (first time)</button>
+    <button class="btn btn-ghost btn-sm" style="margin-left:8px;" onclick="testConnection()">Test Connection</button>
+  </div>
+
+  <div class="settings-section">
+    <h4>Company Details</h4>
+    <div class="settings-row"><label>Company Name</label><input type="text" id="s-company" placeholder="Unipres UK"></div>
+    <div class="settings-row"><label>From Name</label><input type="text" id="s-from" placeholder="Stores Department"></div>
+    <div class="settings-row"><label>Default Supplier Email</label><input type="email" id="s-def-email" placeholder="supplier@example.com"></div>
+  </div>
+
+  <div class="settings-section">
+    <h4>Stock & Reorder</h4>
+    <div class="settings-row">
+      <label>Default Reorder Point</label>
+      <input type="number" id="s-reorder-default" placeholder="5" style="width:100px;">
+    </div>
+    <div class="settings-row">
+      <label>Auto-send PO Email</label>
+      <div class="toggle">
+        <input type="checkbox" id="s-auto-po">
+        <span style="font-size:13px;color:var(--dim);">Send email automatically when stock hits reorder point</span>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+</div>
+
+<!-- ═══════════════════ PART MODAL ═══════════════════ -->
+<div class="modal-backdrop" id="part-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Add Part</h3>
+      <button class="modal-close" onclick="closePartModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="m-id">
+      <div class="form-grid">
+        <div class="field"><label>Part Number</label><input type="text" id="m-partNumber"></div>
+        <div class="field"><label>Description</label><input type="text" id="m-description"></div>
+        <div class="field"><label>Category / Heading</label><input type="text" id="m-itemHeading"></div>
+        <div class="field"><label>OEM / Manufacturer</label><input type="text" id="m-oem"></div>
+        <div class="field"><label>Current Qty</label><input type="number" id="m-qty" min="0"></div>
+        <div class="field"><label>Qty Required</label><input type="number" id="m-qtyRequired" min="0"></div>
+        <div class="field"><label>Unit Cost (£)</label><input type="number" id="m-cost" step="0.01" min="0"></div>
+        <div class="field"><label>Reorder Point</label><input type="number" id="m-reorderPoint" min="0" placeholder="Alert below this qty"></div>
+        <div class="field"><label>Shelf Location</label><input type="text" id="m-location" placeholder="e.g. A3, Shelf 2"></div>
+        <div class="field"><label>CAD Reference</label><input type="text" id="m-cad"></div>
+        <div class="field span2"><label>Link / URL</label><input type="text" id="m-link"></div>
+        <div class="field"><label>3 Quotes Required?</label>
+          <select id="m-threeQuotesRequired">
+            <option value="">No</option><option value="Yes">Yes</option>
+          </select>
+        </div>
+        <div class="field"><label>Unipres PO</label><input type="text" id="m-unipressPO"></div>
+      </div>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px;">Supplier Contacts</p>
+        <div class="form-grid">
+          <div class="field"><label>Contact 1 Email</label><input type="text" id="m-contact1"></div>
+          <div class="field"><label>Quotation 1 (£)</label><input type="number" id="m-quotation1" step="0.01"></div>
+          <div class="field"><label>Contact 2 Email</label><input type="text" id="m-contact2"></div>
+          <div class="field"><label>Quotation 2 (£)</label><input type="number" id="m-quotation2" step="0.01"></div>
+          <div class="field"><label>Contact 3 Email</label><input type="text" id="m-contact3"></div>
+          <div class="field"><label>Quotation 3 (£)</label><input type="number" id="m-quotation3" step="0.01"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="modal-delete-btn" onclick="deletePart()" style="margin-right:auto;display:none;">Delete Part</button>
+      <button class="btn btn-amber btn-sm" id="modal-po-btn" onclick="openPOModal()" style="display:none;">Send PO Email</button>
+      <button class="btn btn-ghost" onclick="closePartModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePart()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- PO Modal -->
+<div class="modal-backdrop" id="po-modal">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <h3>Send Purchase Order</h3>
+      <button class="modal-close" onclick="document.getElementById('po-modal').classList.remove('open')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid wide">
+        <div class="field"><label>Supplier Email</label><input type="email" id="po-email"></div>
+        <div class="field"><label>Quantity to Order</label><input type="number" id="po-qty" min="1"></div>
+        <div class="field"><label>PO Number (optional)</label><input type="text" id="po-number"></div>
+        <div class="field"><label>Notes</label><textarea id="po-notes" placeholder="Any additional information…"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('po-modal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary" onclick="sendPO()">Send Email</button>
+    </div>
+  </div>
+</div>
+
+<!-- Manual lookup modal -->
+<div class="modal-backdrop" id="lookup-modal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <h3>Manual Part Lookup</h3>
+      <button class="modal-close" onclick="document.getElementById('lookup-modal').classList.remove('open')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Part Number or ID</label>
+        <input type="text" id="lookup-input" style="width:100%;" placeholder="Enter part number…" onkeydown="if(event.key==='Enter') doLookup()">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('lookup-modal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary" onclick="doLookup()">Look Up</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── State ──────────────────────────────────────────────────────────────────
+let API_URL = localStorage.getItem('stores_api_url') || 'https://script.google.com/macros/s/AKfycbz2R8YF8ISkVX9XgZ1_Okf5JkY9DHS0k-J_pKIjEA2IXi34MLIASA4c7tucxZos_AjA/exec';
+let inventory = [];
+let transactions = [];
+let lowStock = [];
+let currentPart = null;
+let scanner = null;
+let scannerRunning = false;
+
+// ─── API ─────────────────────────────────────────────────────────────────────
+async function api(params) {
+  if (!API_URL) { toast('Set the API URL in Settings first.', 'error'); throw new Error('No API URL'); }
+  const url = new URL(API_URL);
+  Object.keys(params).forEach(k => url.searchParams.set(k, params[k]));
+  const res = await fetch(url.toString());
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || 'API error');
+  return json.data;
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+async function init() {
+  document.getElementById('s-api-url').value = API_URL;
+  if (!API_URL) {
+    document.getElementById('setup-banner').style.display = 'block';
+    return;
+  }
+  buildColMapUI();
+  await refresh();
+  await loadSettings();
+}
+
+async function refresh() {
+  try {
+    [inventory, transactions, lowStock] = await Promise.all([
+      api({ action: 'getInventory' }),
+      api({ action: 'getTransactions' }),
+      api({ action: 'getLowStock' })
+    ]);
+    renderDashboard();
+    renderInventory();
+    renderLabelsDropdown();
+    updateLowStockBadge();
+  } catch (e) { toast('Load failed: ' + e.message, 'error'); }
+}
+
+// ─── Dashboard ───────────────────────────────────────────────────────────────
+function renderDashboard() {
+  document.getElementById('d-total').textContent = inventory.length;
+  document.getElementById('d-low').textContent   = lowStock.length;
+
+  const value = inventory.reduce((s, p) => {
+    const c = parseFloat(p.cost) || 0;
+    const q = parseInt(p.qty, 10) || 0;
+    return s + c * q;
+  }, 0);
+  document.getElementById('d-value').textContent = '£' + value.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  const thirty = Date.now() - 30*24*60*60*1000;
+  const recent = transactions.filter(t => new Date(t.timestamp).getTime() > thirty);
+  document.getElementById('d-txn').textContent = recent.length;
+
+  // Low stock table
+  const tbody = document.getElementById('low-stock-table');
+  if (!lowStock.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No low-stock items 🎉</td></tr>';
+  } else {
+    tbody.innerHTML = lowStock.map(p => {
+      const q   = parseInt(p.qty, 10) || 0;
+      const rp  = parseInt(p.reorderPoint, 10) || 0;
+      const cls = q === 0 ? 'badge-red' : 'badge-amber';
+      const lbl = q === 0 ? 'Out of Stock' : 'Low';
+      return `<tr onclick="openPartModal(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+        <td><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">${esc(p.partNumber)}</span></td>
+        <td>${esc(p.description)}</td>
+        <td>${esc(p.oem)}</td>
+        <td><strong style="color:var(--red)">${q}</strong></td>
+        <td>${rp}</td>
+        <td style="font-size:12px;">${esc(p.contact1)}</td>
+        <td><button class="btn btn-amber btn-sm" onclick="event.stopPropagation();quickPO('${p.id}')">Send PO</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Recent transactions
+  const rtbody = document.getElementById('recent-txn-table');
+  const rtxns = transactions.slice(0, 20);
+  if (!rtxns.length) {
+    rtbody.innerHTML = '<tr><td colspan="6" class="empty-state">No transactions yet</td></tr>';
+  } else {
+    rtbody.innerHTML = rtxns.map(t => {
+      const part = inventory.find(p => p.id === t.partId);
+      const name = part ? (part.partNumber || part.description) : t.partId;
+      const cls  = t.type === 'add' ? 'badge-green' : 'badge-red';
+      const sign = t.type === 'add' ? '+' : '−';
+      const ts   = new Date(t.timestamp).toLocaleString('en-GB', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+      return `<tr>
+        <td style="font-size:11px;color:var(--muted);">${ts}</td>
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;">${esc(name)}</td>
+        <td><span class="badge ${cls}">${t.type}</span></td>
+        <td><strong>${sign}${t.quantity}</strong></td>
+        <td style="font-size:12px;">${esc(t.user)}</td>
+        <td style="font-size:12px;color:var(--muted);">${esc(t.notes)}</td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+function updateLowStockBadge() {
+  const badge = document.getElementById('low-stock-badge');
+  if (lowStock.length > 0) {
+    badge.textContent = lowStock.length + ' low';
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ─── Inventory ────────────────────────────────────────────────────────────────
+function renderInventory() {
+  // Populate heading filter
+  const headings = [...new Set(inventory.map(p => p.itemHeading).filter(Boolean))].sort();
+  const fh = document.getElementById('inv-filter-heading');
+  const cur = fh.value;
+  fh.innerHTML = '<option value="">All categories</option>' + headings.map(h => `<option ${h===cur?'selected':''} value="${esc(h)}">${esc(h)}</option>`).join('');
+  filterInventory();
+}
+
+function filterInventory() {
+  const q   = document.getElementById('inv-search').value.toLowerCase();
+  const cat = document.getElementById('inv-filter-heading').value;
+  const stk = document.getElementById('inv-filter-stock').value;
+
+  let filtered = inventory.filter(p => {
+    if (q && !`${p.partNumber} ${p.description} ${p.oem} ${p.itemHeading}`.toLowerCase().includes(q)) return false;
+    if (cat && p.itemHeading !== cat) return false;
+    if (stk === 'low') {
+      const rp = parseInt(p.reorderPoint, 10) || 0;
+      const qty = parseInt(p.qty, 10) || 0;
+      return rp > 0 && qty <= rp;
+    }
+    if (stk === 'ok') {
+      const rp = parseInt(p.reorderPoint, 10) || 0;
+      const qty = parseInt(p.qty, 10) || 0;
+      return rp === 0 || qty > rp;
+    }
+    return true;
+  });
+
+  const tbody = document.getElementById('inv-table');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-state">No parts found</td></tr>';
+  } else {
+    tbody.innerHTML = filtered.map(p => {
+      const qty = parseInt(p.qty, 10) || 0;
+      const rp  = parseInt(p.reorderPoint, 10) || 0;
+      let status = '<span class="badge badge-green">OK</span>';
+      if (rp > 0 && qty === 0) status = '<span class="badge badge-red">Out</span>';
+      else if (rp > 0 && qty <= rp) status = '<span class="badge badge-amber">Low</span>';
+      const cost = p.cost ? '£' + parseFloat(p.cost).toFixed(2) : '';
+      return `<tr onclick="openPartModal(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;">${esc(p.partNumber)}</td>
+        <td>${esc(p.description)}</td>
+        <td style="font-size:12px;color:var(--muted);">${esc(p.itemHeading)}</td>
+        <td style="font-size:12px;">${esc(p.oem)}</td>
+        <td><strong ${qty===0?'style="color:var(--red)"':rp>0&&qty<=rp?'style="color:var(--amber)"':''}>${qty}</strong></td>
+        <td style="font-size:12px;color:var(--muted);">${rp||'—'}</td>
+        <td style="font-size:12px;">${cost}</td>
+        <td style="font-size:12px;color:var(--muted);">${esc(p.location)}</td>
+        <td>${status}</td>
+      </tr>`;
+    }).join('');
+  }
+  document.getElementById('inv-footer').textContent = `Showing ${filtered.length} of ${inventory.length} parts`;
+}
+
+// ─── Part Modal ───────────────────────────────────────────────────────────────
+const MODAL_FIELDS = ['id','partNumber','description','itemHeading','oem','qty','qtyRequired',
+  'cost','reorderPoint','location','cad','link','threeQuotesRequired','unipressPO',
+  'contact1','contact2','contact3','quotation1','quotation2','quotation3'];
+
+function openPartModal(part) {
+  currentPart = part;
+  document.getElementById('modal-title').textContent = part ? 'Edit Part' : 'Add Part';
+  MODAL_FIELDS.forEach(f => {
+    const el = document.getElementById('m-' + f);
+    if (el) el.value = part ? (part[f] || '') : '';
+  });
+  document.getElementById('modal-delete-btn').style.display = part ? 'inline-flex' : 'none';
+  document.getElementById('modal-po-btn').style.display     = part ? 'inline-flex' : 'none';
+  document.getElementById('part-modal').classList.add('open');
+}
+
+function closePartModal() {
+  document.getElementById('part-modal').classList.remove('open');
+  currentPart = null;
+}
+
+async function savePart() {
+  const part = {};
+  MODAL_FIELDS.forEach(f => {
+    const el = document.getElementById('m-' + f);
+    if (el) part[f] = el.value.trim();
+  });
+  if (!part.description && !part.partNumber) { toast('Part number or description required', 'error'); return; }
+  try {
+    if (part.id) {
+      await api({ action: 'updatePart', row: JSON.stringify(part) });
+    } else {
+      delete part.id;
+      await api({ action: 'addPart', row: JSON.stringify(part) });
+    }
+    toast('Saved successfully', 'success');
+    closePartModal();
+    await refresh();
+  } catch (e) { toast('Save failed: ' + e.message, 'error'); }
+}
+
+async function deletePart() {
+  if (!currentPart) return;
+  if (!confirm('Delete "' + (currentPart.partNumber || currentPart.description) + '"? This cannot be undone.')) return;
+  try {
+    await api({ action: 'deletePart', id: currentPart.id });
+    toast('Part deleted', 'success');
+    closePartModal();
+    await refresh();
+  } catch (e) { toast('Delete failed: ' + e.message, 'error'); }
+}
+
+// ─── PO Modal ─────────────────────────────────────────────────────────────────
+function openPOModal() {
+  if (!currentPart) return;
+  document.getElementById('po-email').value  = currentPart.contact1 || '';
+  document.getElementById('po-qty').value    = currentPart.qtyRequired || 1;
+  document.getElementById('po-number').value = '';
+  document.getElementById('po-notes').value  = '';
+  document.getElementById('po-modal').classList.add('open');
+}
+
+function quickPO(partId) {
+  currentPart = inventory.find(p => p.id === partId);
+  if (currentPart) openPOModal();
+}
+
+async function sendPO() {
+  if (!currentPart) return;
+  const params = {
+    action:   'sendPO',
+    partId:   currentPart.id,
+    toEmail:  document.getElementById('po-email').value.trim(),
+    qty:      document.getElementById('po-qty').value,
+    poNumber: document.getElementById('po-number').value.trim(),
+    notes:    document.getElementById('po-notes').value.trim()
+  };
+  if (!params.toEmail) { toast('Supplier email required', 'error'); return; }
+  try {
+    await api(params);
+    toast('PO email sent to ' + params.toEmail, 'success');
+    document.getElementById('po-modal').classList.remove('open');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+// ─── QR Scanner ───────────────────────────────────────────────────────────────
+function toggleScanner() {
+  if (scannerRunning) stopScanner();
+  else startScanner();
+}
+
+function startScanner() {
+  if (scanner) { scanner.clear(); scanner = null; }
+  scanner = new Html5Qrcode('qr-reader');
+  scanner.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: { width: 250, height: 250 } },
+    onScanSuccess,
+    () => {}
+  ).then(() => {
+    scannerRunning = true;
+    document.getElementById('scan-toggle-btn').textContent = '⏹ Stop Camera';
+  }).catch(err => {
+    toast('Camera error: ' + err, 'error');
+  });
+}
+
+function stopScanner() {
+  if (scanner) {
+    scanner.stop().then(() => { scanner = null; scannerRunning = false; });
+    document.getElementById('scan-toggle-btn').textContent = '▶ Start Camera';
+  }
+}
+
+function onScanSuccess(decodedText) {
+  stopScanner();
+  loadScannedPart(decodedText.trim());
+}
+
+function manualLookup() {
+  document.getElementById('lookup-input').value = '';
+  document.getElementById('lookup-modal').classList.add('open');
+  setTimeout(() => document.getElementById('lookup-input').focus(), 100);
+}
+
+function doLookup() {
+  const val = document.getElementById('lookup-input').value.trim();
+  document.getElementById('lookup-modal').classList.remove('open');
+  if (val) loadScannedPart(val);
+}
+
+function loadScannedPart(idOrPartNum) {
+  const part = inventory.find(p => p.id === idOrPartNum || String(p.partNumber) === idOrPartNum);
+  if (!part) {
+    toast('Part not found: ' + idOrPartNum, 'error');
+    return;
+  }
+  showScanResult(part);
+}
+
+function showScanResult(part) {
+  currentPart = part;
+  const qty   = parseInt(part.qty, 10) || 0;
+  const rp    = parseInt(part.reorderPoint, 10) || 0;
+  document.getElementById('scan-name').textContent = part.partNumber || part.description;
+  document.getElementById('scan-sub').textContent  = [part.description, part.itemHeading, part.location].filter(Boolean).join(' · ');
+  document.getElementById('scan-qty').textContent  = qty;
+  document.getElementById('scan-qty').className    = 'qty-display' + (rp > 0 && qty <= rp ? ' low' : '');
+  document.getElementById('adj-qty').value         = 1;
+  document.getElementById('adj-user').value        = localStorage.getItem('last_user') || '';
+  document.getElementById('adj-notes').value       = '';
+  document.getElementById('scan-result').classList.add('visible');
+}
+
+async function doAdjust(type) {
+  if (!currentPart) return;
+  const qty   = parseInt(document.getElementById('adj-qty').value, 10);
+  const user  = document.getElementById('adj-user').value.trim();
+  const notes = document.getElementById('adj-notes').value.trim();
+  if (!qty || qty <= 0) { toast('Enter a valid quantity', 'error'); return; }
+  if (user) localStorage.setItem('last_user', user);
+  try {
+    const res = await api({ action:'adjustStock', partId:currentPart.id, type, quantity:qty, user, notes });
+    toast((type==='add'?'Added ':'Deducted ') + qty + ' — new stock: ' + res.newQty, 'success');
+    if (res.lowStock) setTimeout(() => toast('⚠ Stock is at or below reorder point!', 'error'), 1500);
+    // Update local state
+    currentPart.qty = res.newQty;
+    document.getElementById('scan-qty').textContent = res.newQty;
+    document.getElementById('scan-qty').className = 'qty-display' + (res.lowStock ? ' low' : '');
+    await refresh();
+  } catch (e) { toast('Error: ' + e.message, 'error'); }
+}
+
+function clearScan() {
+  document.getElementById('scan-result').classList.remove('visible');
+  currentPart = null;
+  startScanner();
+}
+
+// ─── Labels ───────────────────────────────────────────────────────────────────
+function renderLabelsDropdown() {
+  const headings = [...new Set(inventory.map(p => p.itemHeading).filter(Boolean))].sort();
+  const el = document.getElementById('label-filter');
+  const cur = el.value;
+  el.innerHTML = '<option value="">All categories</option>' + headings.map(h => `<option ${h===cur?'selected':''} value="${esc(h)}">${esc(h)}</option>`).join('');
+}
+
+function filterLabels() {
+  generateLabels();
+}
+
+function generateLabels() {
+  const q   = document.getElementById('label-search').value.toLowerCase();
+  const cat = document.getElementById('label-filter').value;
+
+  const filtered = inventory.filter(p => {
+    if (q && !`${p.partNumber} ${p.description}`.toLowerCase().includes(q)) return false;
+    if (cat && p.itemHeading !== cat) return false;
+    return true;
+  });
+
+  document.getElementById('label-count').textContent = filtered.length + ' labels';
+  const grid = document.getElementById('label-grid');
+
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty-state">No parts match the filter.</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map((p, i) => `<div class="label-card" id="label-${i}">
+    <canvas id="qr-${i}"></canvas>
+    <div class="label-pn">${esc(p.partNumber || p.id)}</div>
+    <div class="label-desc" title="${esc(p.description)}">${esc(p.description)}</div>
+    ${p.location ? `<div class="label-loc">📍 ${esc(p.location)}</div>` : ''}
+  </div>`).join('');
+
+  filtered.forEach((p, i) => {
+    QRCode.toCanvas(document.getElementById('qr-' + i), p.id, { width: 120, margin: 1, color: { dark: '#000', light: '#fff' } });
+  });
+}
+
+// ─── Import ───────────────────────────────────────────────────────────────────
+const YOUR_COLUMNS = [
+  'Item','Qty Required','Item Heading','Description','OEM',
+  '3 Quotes Required?','Part Number','Link','Qty','Cost',
+  'Quotation 1','Quotation 2','Quotation 3',
+  'Contact 1','Contact 2','Contact 3',
+  'Unipres PO','PO Copy','CAD'
+];
+const INV_FIELDS = [
+  '','item','qtyRequired','itemHeading','description','oem',
+  'threeQuotesRequired','partNumber','link','qty','cost',
+  'quotation1','quotation2','quotation3',
+  'contact1','contact2','contact3',
+  'unipressPO','poCopy','cad'
+];
+const DEFAULT_MAP = {
+  'Item':'item','Qty Required':'qtyRequired','Item Heading':'itemHeading',
+  'Description':'description','OEM':'oem','3 Quotes Required?':'threeQuotesRequired',
+  'Part Number':'partNumber','Link':'link','Qty':'qty','Cost':'cost',
+  'Quotation 1':'quotation1','Quotation 2':'quotation2','Quotation 3':'quotation3',
+  'Contact 1':'contact1','Contact 2':'contact2','Contact 3':'contact3',
+  'Unipres PO':'unipressPO','PO Copy':'poCopy','CAD':'cad'
+};
+const DEST_OPTIONS = ['(skip)','item','partNumber','description','itemHeading','oem','qty','qtyRequired',
+  'cost','threeQuotesRequired','link','quotation1','quotation2','quotation3',
+  'contact1','contact2','contact3','unipressPO','poCopy','cad','reorderPoint','location'];
+
+function buildColMapUI() {
+  const container = document.getElementById('col-map-container');
+  if (!container) return;
+  container.innerHTML = YOUR_COLUMNS.map(col => {
+    const mapped = DEFAULT_MAP[col] || '';
+    const opts = DEST_OPTIONS.map(o => `<option value="${o}" ${o===mapped?'selected':''}>${o||'(skip)'}</option>`).join('');
+    return `<div class="col-map-row">
+      <span style="color:var(--dim);">${col}</span>
+      <span class="arrow">→</span>
+      <select id="map-${col.replace(/[^a-z0-9]/gi,'_')}">${opts}</select>
+    </div>`;
+  }).join('');
+}
+
+async function runImport() {
+  const sheetId   = document.getElementById('import-sheet-id').value.trim();
+  const sheetName = document.getElementById('import-sheet-name').value.trim();
+  if (!sheetId) { toast('Paste your Sheet ID first', 'error'); return; }
+
+  const colMap = {};
+  YOUR_COLUMNS.forEach(col => {
+    const el = document.getElementById('map-' + col.replace(/[^a-z0-9]/gi,'_'));
+    if (el && el.value) colMap[col] = el.value;
+  });
+
+  const btn = document.getElementById('import-btn');
+  btn.innerHTML = '<span class="spinner"></span> Importing…';
+  btn.disabled  = true;
+
+  try {
+    const res = await api({ action:'importFromSheet', sheetId, sheetName, columnMap:JSON.stringify(colMap) });
+    const step = document.getElementById('import-result-step');
+    step.style.display = 'block';
+    document.getElementById('import-result').innerHTML =
+      `<p style="color:var(--green);font-size:14px;margin-bottom:6px;">✓ Import complete</p>
+       <p style="font-size:13px;color:var(--dim);">Imported: <strong>${res.imported}</strong> parts &nbsp;·&nbsp; Skipped: <strong>${res.skipped}</strong> (duplicates or empty rows)</p>`;
+    toast('Imported ' + res.imported + ' parts', 'success');
+    await refresh();
+  } catch (e) {
+    toast('Import failed: ' + e.message, 'error');
+  } finally {
+    btn.innerHTML = 'Import Parts';
+    btn.disabled  = false;
+  }
+}
+
+// ─── Settings ─────────────────────────────────────────────────────────────────
+async function loadSettings() {
+  try {
+    const s = await api({ action: 'getSettings' });
+    document.getElementById('s-company').value        = s.companyName || '';
+    document.getElementById('s-from').value           = s.fromName    || '';
+    document.getElementById('s-def-email').value      = s.defaultSupplierEmail || '';
+    document.getElementById('s-reorder-default').value= s.reorderDefault || '';
+    document.getElementById('s-auto-po').checked      = s.autoPO === 'true';
+  } catch (_) {}
+}
+
+function saveApiUrl() {
+  const url = document.getElementById('s-api-url').value.trim();
+  if (!url) { toast('Paste the Apps Script URL', 'error'); return; }
+  API_URL = url;
+  localStorage.setItem('stores_api_url', url);
+  toast('URL saved — loading data…', 'success');
+  document.getElementById('setup-banner').style.display = 'none';
+  buildColMapUI();
+  refresh();
+  loadSettings();
+}
+
+async function runSetup() {
+  if (!API_URL) { toast('Save the API URL first', 'error'); return; }
+  try {
+    await api({ action: 'setup' });
+    toast('Sheets created successfully', 'success');
+  } catch (e) { toast('Setup failed: ' + e.message, 'error'); }
+}
+
+async function testConnection() {
+  if (!API_URL) { toast('No API URL set', 'error'); return; }
+  try {
+    const data = await api({ action: 'getInventory' });
+    toast('Connected ✓ — ' + data.length + ' parts found', 'success');
+  } catch (e) { toast('Connection failed: ' + e.message, 'error'); }
+}
+
+async function saveSettings() {
+  const settings = {
+    companyName:         document.getElementById('s-company').value.trim(),
+    fromName:            document.getElementById('s-from').value.trim(),
+    defaultSupplierEmail:document.getElementById('s-def-email').value.trim(),
+    reorderDefault:      document.getElementById('s-reorder-default').value.trim(),
+    autoPO:              document.getElementById('s-auto-po').checked ? 'true' : 'false'
+  };
+  try {
+    await api({ action: 'updateSettings', settings: JSON.stringify(settings) });
+    toast('Settings saved', 'success');
+  } catch (e) { toast('Save failed: ' + e.message, 'error'); }
+}
+
+// ─── Nav / Views ─────────────────────────────────────────────────────────────
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.site-nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name !== 'scan' && scannerRunning) stopScanner();
+  if (name === 'labels') generateLabels();
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let toastTimer;
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + type + ' show';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// Close modals on backdrop click
+document.querySelectorAll('.modal-backdrop').forEach(bd => {
+  bd.addEventListener('click', e => { if (e.target === bd) bd.classList.remove('open'); });
+});
+
+init();
+</script>
+</body>
+</html>
